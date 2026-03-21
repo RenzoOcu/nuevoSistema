@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Listo POS · Gestión de Inventario</title>
+  <meta name="description" content="Sistema profesional de gestión de inventario para minimarket Listo. Control de productos perecibles, fechas de vencimiento y recetas de preparación." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css?v=2" />
+</head>
+<body>
+
+  <!-- ===== SIDEBAR NAV ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div>
+        <span class="logo-brand">LISTO</span>
+        <span class="logo-sub">Minimarket POS</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <button class="nav-item active" id="nav-dashboard" onclick="showModule('dashboard')" aria-label="Panel Principal">
+        <span class="nav-label">Panel Principal</span>
+      </button>
+      <button class="nav-item" id="nav-inventory" onclick="showModule('inventory')" aria-label="Inventario">
+        <span class="nav-label">Inventario</span>
+      </button>
+      <button class="nav-item" id="nav-recipes" onclick="showModule('recipes')" aria-label="Recetas">
+        <span class="nav-label">Recetas</span>
+      </button>
+      <button class="nav-item" id="nav-alerts" onclick="showModule('alerts')" aria-label="Alertas">
+        <span class="nav-label">Alertas</span>
+        <span class="nav-badge" id="alert-badge">0</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-time" id="sidebar-time"></div>
+      <div class="sidebar-date" id="sidebar-date"></div>
+    </div>
+  </aside>
+
+  <!-- ===== MOBILE TOPBAR ===== -->
+  <header class="topbar">
+    <button class="menu-toggle" id="menu-toggle" onclick="toggleSidebar()" aria-label="Menú">
+      <span></span><span></span><span></span>
+    </button>
+    <span class="topbar-title">Listo POS</span>
+    <div class="topbar-alerts">
+      <span class="topbar-badge" id="topbar-badge">0</span>
+      <span>⚠️</span>
+    </div>
+  </header>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="main-content" id="main-content">
+
+    <!-- ── MODULE: DASHBOARD ── -->
+    <section class="module" id="module-dashboard">
+      <div class="module-header">
+        <div>
+          <h1 class="module-title">Panel Principal</h1>
+          <p class="module-subtitle">Resumen del inventario en tiempo real</p>
+        </div>
+        <button class="btn btn-primary" onclick="showModule('inventory')">+ Nuevo Producto</button>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="stats-grid">
+        <div class="stat-card" id="stat-total">
+          <span class="stat-label">Total Productos</span>
+          <span class="stat-value" id="stat-total-val">0</span>
+        </div>
+        <div class="stat-card stat-warn" id="stat-expiring">
+          <span class="stat-label">Por Vencer</span>
+          <span class="stat-value" id="stat-expiring-val">0</span>
+        </div>
+        <div class="stat-card stat-danger" id="stat-expired">
+          <span class="stat-label">Vencidos</span>
+          <span class="stat-value" id="stat-expired-val">0</span>
+        </div>
+        <div class="stat-card stat-info" id="stat-lowstock">
+          <span class="stat-label">Bajo Stock</span>
+          <span class="stat-value" id="stat-lowstock-val">0</span>
+        </div>
+      </div>
+
+      <!-- Product Cards Grid -->
+      <div class="section-header">
+        <h2 class="section-title">Productos Destacados</h2>
+        <select class="filter-select" id="dashboard-filter" onchange="renderDashboardCards()">
+          <option value="all">Todos</option>
+          <option value="expiring">Por vencer</option>
+          <option value="expired">Vencidos</option>
+          <option value="lowstock">Bajo stock</option>
+        </select>
+      </div>
+      <div class="product-cards-grid" id="dashboard-cards"></div>
+    </section>
+
+    <!-- ── MODULE: INVENTORY ── -->
+    <section class="module hidden" id="module-inventory">
+      <div class="module-header">
+        <div>
+          <h1 class="module-title">Inventario</h1>
+          <p class="module-subtitle">Gestión completa de productos</p>
+        </div>
+        <button class="btn btn-primary" onclick="openProductModal()" id="btn-add-product">+ Agregar Producto</button>
+      </div>
+
+      <!-- Search and Filter Bar -->
+      <div class="toolbar">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="search-input" class="search-input" placeholder="Buscar producto..." oninput="filterInventory()" />
+        </div>
+        <div class="filter-group">
+          <button class="filter-btn active" data-filter="all" onclick="setInventoryFilter('all', this)">Todos</button>
+          <button class="filter-btn" data-filter="normal" onclick="setInventoryFilter('normal', this)">Normal</button>
+          <button class="filter-btn" data-filter="expiring" onclick="setInventoryFilter('expiring', this)">Por Vencer</button>
+          <button class="filter-btn" data-filter="expired" onclick="setInventoryFilter('expired', this)">Vencidos</button>
+        </div>
+      </div>
+
+      <!-- Inventory Table -->
+      <div class="product-cards-grid" id="inventory-grid">
+        <!-- JS renders products here -->
+      </div>
+      <div class="empty-state hidden" id="inventory-empty">
+          <span class="empty-icon">📭</span>
+          <p>No se encontraron productos</p>
+        </div>
+    </section>
+
+    <!-- ── MODULE: RECIPES ── -->
+    <section class="module hidden" id="module-recipes">
+      <div class="module-header">
+        <div>
+          <h1 class="module-title">Recetas Interactivas</h1>
+          <p class="module-subtitle">Guías paso a paso para preparación de alimentos</p>
+        </div>
+        <button class="btn btn-primary" onclick="openRecipeFormModal()" id="btn-add-recipe">+ Nueva Guía</button>
+      </div>
+
+      <div class="recipes-grid" id="recipes-grid"></div>
+
+      <!-- Recipe Detail Modal -->
+      <div class="recipe-detail hidden" id="recipe-detail">
+        <div class="recipe-detail-inner">
+          <button class="recipe-close-btn" onclick="closeRecipeDetail()" aria-label="Cerrar">✕</button>
+          <div class="recipe-detail-header">
+            <div class="recipe-emoji" id="detail-emoji"></div>
+            <div>
+              <h2 class="recipe-detail-title" id="detail-title"></h2>
+              <p class="recipe-detail-meta" id="detail-meta"></p>
+            </div>
+          </div>
+          <div class="recipe-detail-body">
+            <div class="recipe-col">
+              <h3 class="recipe-section-title">🧂 Ingredientes</h3>
+              <ul class="ingredients-list" id="detail-ingredients"></ul>
+            </div>
+            <div class="recipe-col">
+              <h3 class="recipe-section-title">👨‍🍳 Preparación</h3>
+              <ol class="steps-list" id="detail-steps"></ol>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── MODULE: ALERTS ── -->
+    <section class="module hidden" id="module-alerts">
+      <div class="module-header">
+        <div>
+          <h1 class="module-title">Centro de Alertas</h1>
+          <p class="module-subtitle">Productos que requieren atención inmediata</p>
+        </div>
+        <div class="alert-summary" id="alert-summary-bar"></div>
+      </div>
+
+      <div class="alerts-section">
+        <div class="alert-group">
+          <div class="alert-group-header alert-group-red">
+            <h2>Productos Vencidos</h2>
+            <span class="alert-count" id="count-expired">0</span>
+          </div>
+          <div class="alert-cards-grid" id="alert-expired-cards"></div>
+          <div class="alert-empty hidden" id="empty-expired">✅ Sin productos vencidos</div>
+        </div>
+
+        <div class="alert-group">
+          <div class="alert-group-header alert-group-yellow">
+            <h2>Por Vencer — próximos 3 días</h2>
+            <span class="alert-count" id="count-expiring">0</span>
+          </div>
+          <div class="alert-cards-grid" id="alert-expiring-cards"></div>
+          <div class="alert-empty hidden" id="empty-expiring">✅ Sin productos por vencer</div>
+        </div>
+      </div>
+
+      <!-- n8n / API integration hook (future) -->
+      <!-- INTEGRATION POINT: POST /api/alerts on product status change -->
+      <div class="integration-notice">
+        <span class="integration-icon">🔗</span>
+        <div>
+          <strong>Integración Externa</strong>
+          <p>Estructura preparada para conexión con n8n / Webhook. Ver <code>js/api.js</code></p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===== PRODUCT MODAL ===== -->
+  <div class="modal-overlay hidden" id="product-modal-overlay" onclick="closeProductModal(event)">
+    <div class="modal" id="product-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-title">Nuevo Producto</h2>
+        <button class="modal-close" onclick="closeProductModal(null)" aria-label="Cerrar">✕</button>
+      </div>
+      <form class="modal-form" id="product-form" onsubmit="saveProduct(event)">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="f-name">Nombre del Producto *</label>
+            <input class="form-input" id="f-name" type="text" placeholder="Ej: Sándwich de Pollo" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="f-category">Categoría *</label>
+            <select class="form-input" id="f-category" required>
+              <option value="">Seleccionar...</option>
+              <option>Sándwiches</option>
+              <option>Hamburguesas</option>
+              <option>Bebidas</option>
+              <option>Lácteos</option>
+              <option>Snacks</option>
+              <option>Ingredientes</option>
+              <option>Panadería</option>
+              <option>Otros</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="f-stock">Stock (unidades) *</label>
+            <input class="form-input" id="f-stock" type="number" min="0" placeholder="0" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="f-lowstock">Alerta Bajo Stock</label>
+            <input class="form-input" id="f-lowstock" type="number" min="1" placeholder="5" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="f-entry">Fecha de Ingreso *</label>
+            <input class="form-input" id="f-entry" type="date" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="f-expiry">Fecha de Vencimiento *</label>
+            <input class="form-input" id="f-expiry" type="date" required />
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" onclick="closeProductModal(null)">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar Producto</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== RECIPE MODAL ===== -->
+  <div class="modal-overlay hidden" id="recipe-form-overlay" onclick="closeRecipeFormModal(event)">
+    <div class="modal" id="recipe-form-modal" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <h2 class="modal-title">Nueva Guía Interactiva</h2>
+        <button class="modal-close" onclick="closeRecipeFormModal(null)" aria-label="Cerrar">✕</button>
+      </div>
+      <form class="modal-form" id="gui-form" onsubmit="saveRecipe(event)">
+        <div class="form-grid">
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label class="form-label" for="r-name">Nombre de la Guía *</label>
+            <input class="form-input" id="r-name" type="text" placeholder="Ej: Pizza Artesanal" required />
+          </div>
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label class="form-label" for="r-desc">Pasos de Preparación *</label>
+            <textarea class="form-input" id="r-desc" rows="6" placeholder="Escribe los pasos de preparación..." required></textarea>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" onclick="closeRecipeFormModal(null)">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar Guía</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== DELETE CONFIRM MODAL ===== -->
+  <div class="modal-overlay hidden" id="delete-modal-overlay" onclick="closeDeleteModal(event)">
+    <div class="modal modal-sm" id="delete-modal" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <h2 class="modal-title" id="delete-modal-title">Eliminar Modal</h2>
+        <button class="modal-close" onclick="closeDeleteModal(null)" aria-label="Cerrar">✕</button>
+      </div>
+      <p class="delete-msg">¿Estás seguro de que deseas eliminar <strong id="delete-name"></strong>? Esta acción no se puede deshacer.</p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeDeleteModal(null)">Cancelar</button>
+        <button type="button" class="btn btn-danger" onclick="confirmDelete()">Eliminar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TOAST NOTIFICATION ===== -->
+  <div class="toast hidden" id="toast" role="alert" aria-live="polite"></div>
+
+  <!-- Scripts -->
+  <script type="module" src="js/app.js?v=20"></script>
+</body>
+</html>

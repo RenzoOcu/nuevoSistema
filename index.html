@@ -35,6 +35,9 @@
         <span class="nav-label">Alertas</span>
         <span class="nav-badge" id="alert-badge">0</span>
       </button>
+      <button class="nav-item" id="nav-preparados" onclick="showModule('preparados')" aria-label="Preparados">
+        <span class="nav-label">Preparados</span>
+      </button>
     </nav>
 
     <div class="sidebar-footer">
@@ -213,6 +216,96 @@
       </div>
     </section>
 
+    <!-- ── MODULE: PREPARADOS ── -->
+    <section class="module hidden" id="module-preparados">
+      <div class="module-header">
+        <div>
+          <h1 class="module-title">Menú de Preparados</h1>
+          <p class="module-subtitle">Catálogo de hamburguesas y sus ingredientes</p>
+        </div>
+      </div>
+
+      <div class="product-cards-grid">
+        <!-- 1. La Monster -->
+        <div class="product-card" style="border-bottom: 3px solid var(--yellow); padding: 24px;">
+          <div class="product-card-row" style="margin-bottom: 12px;">
+            <span class="product-card-name" style="font-size: 1.3rem; font-weight: 800;">🐲 La Monster</span>
+          </div>
+          <img src="img/monster.png" alt="La Monster" class="burger-img" />
+          <ul style="padding-left: 20px; font-size: 0.95rem; color: var(--text-muted); line-height: 1.8;">
+            <li>1x Pan de hamburguesa</li>
+            <li><strong>2x Carnes de hamburguesa</strong></li>
+            <li>Queso</li>
+            <li>Tocino</li>
+            <li>Lechuga</li>
+            <li>Tomate</li>
+          </ul>
+        </div>
+        
+        <!-- 2. La Flamante -->
+        <div class="product-card" style="border-bottom: 3px solid #ff5722; padding: 24px;">
+          <div class="product-card-row" style="margin-bottom: 12px;">
+            <span class="product-card-name" style="font-size: 1.3rem; font-weight: 800;">🔥 La Flamante</span>
+          </div>
+          <img src="img/flamante.png" alt="La Flamante" class="burger-img" />
+          <ul style="padding-left: 20px; font-size: 0.95rem; color: var(--text-muted); line-height: 1.8;">
+            <li>1x Pan de hamburguesa</li>
+            <li>1x Carne de hamburguesa</li>
+            <li>1x Queso</li>
+            <li><strong>Chorizo</strong></li>
+            <li>Lechuga</li>
+            <li>Tomate</li>
+          </ul>
+        </div>
+        
+        <!-- 3. Cheese Burger -->
+        <div class="product-card" style="border-bottom: 3px solid #fbc02d; padding: 24px;">
+          <div class="product-card-row" style="margin-bottom: 12px;">
+            <span class="product-card-name" style="font-size: 1.3rem; font-weight: 800;">🧀 Cheese Burger</span>
+          </div>
+          <img src="img/cheese.png" alt="Cheese Burger" class="burger-img" />
+          <ul style="padding-left: 20px; font-size: 0.95rem; color: var(--text-muted); line-height: 1.8;">
+            <li>1x Pan de hamburguesa</li>
+            <li>1x Carne de hamburguesa</li>
+            <li><strong>1x Queso (Extra)</strong></li>
+            <li>Lechuga</li>
+            <li>Tomate</li>
+          </ul>
+        </div>
+        
+        <!-- 4. La Casera -->
+        <div class="product-card" style="border-bottom: 3px solid #795548; padding: 24px;">
+          <div class="product-card-row" style="margin-bottom: 12px;">
+            <span class="product-card-name" style="font-size: 1.3rem; font-weight: 800;">🏡 La Casera</span>
+          </div>
+          <img src="img/casera.png" alt="La Casera" class="burger-img" />
+          <ul style="padding-left: 20px; font-size: 0.95rem; color: var(--text-muted); line-height: 1.8;">
+            <li>1x Pan de hamburguesa</li>
+            <li>1x Carne de hamburguesa</li>
+            <li>1x Queso</li>
+            <li><strong>Tocino</strong></li>
+            <li>Lechuga</li>
+            <li>Tomate</li>
+          </ul>
+        </div>
+        
+        <!-- 5. La Clásica -->
+        <div class="product-card" style="border-bottom: 3px solid #9e9e9e; padding: 24px;">
+          <div class="product-card-row" style="margin-bottom: 12px;">
+            <span class="product-card-name" style="font-size: 1.3rem; font-weight: 800;">🍔 La Clásica</span>
+          </div>
+          <img src="img/clasica.png" alt="La Clásica" class="burger-img" />
+          <ul style="padding-left: 20px; font-size: 0.95rem; color: var(--text-muted); line-height: 1.8;">
+            <li>1x Pan de hamburguesa</li>
+            <li>1x Carne de hamburguesa</li>
+            <li>Lechuga</li>
+            <li>Tomate</li>
+          </ul>
+        </div>
+
+      </div>
+    </section>
+
   </main>
 
   <!-- ===== PRODUCT MODAL ===== -->
@@ -284,6 +377,13 @@
             <label class="form-label" for="r-desc">Pasos de Preparación *</label>
             <textarea class="form-input" id="r-desc" rows="6" placeholder="Escribe los pasos de preparación..." required></textarea>
           </div>
+          <div class="form-group" style="grid-column: 1 / -1; margin-top: 10px;">
+            <label class="form-label">Ingredientes de la Receta</label>
+            <div id="ingredients-container" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px;">
+              <!-- Dynamic rows will be added here -->
+            </div>
+            <button type="button" class="btn btn-ghost" onclick="addIngredientRow()" style="width: 100%; border: 1px dashed var(--yellow); color: var(--yellow);">+ Añadir Ingrediente</button>
+          </div>
         </div>
         <div class="modal-actions">
           <button type="button" class="btn btn-ghost" onclick="closeRecipeFormModal(null)">Cancelar</button>
@@ -312,6 +412,6 @@
   <div class="toast hidden" id="toast" role="alert" aria-live="polite"></div>
 
   <!-- Scripts -->
-  <script type="module" src="js/app.js?v=20"></script>
+  <script type="module" src="js/app.js?v=21"></script>
 </body>
 </html>

@@ -9,6 +9,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 let ALL_PRODUCTS = [];
 let ALL_RECIPES = [];
+let ALL_INGREDIENTS = [];
 
 // Start app exactly when DOM is ready
 if (document.readyState === 'loading') {
@@ -73,21 +74,25 @@ function showToast(msg, type = 'success') {
 
 async function loadData() {
   try {
-    const [prodRes, recRes] = await Promise.all([
+    const [prodRes, recRes, ingRes] = await Promise.all([
       supabase.from('productos').select(`*, recetas(id, nombre)`),
-      supabase.from('recetas').select('*')
+      supabase.from('recetas').select('*'),
+      supabase.from('ingredientes').select('*')
     ]);
       
     if (prodRes.error) throw prodRes.error;
     if (recRes.error) throw recRes.error;
+    if (ingRes.error) throw ingRes.error;
     
     ALL_PRODUCTS = prodRes.data || [];
     ALL_RECIPES = recRes.data || [];
+    ALL_INGREDIENTS = ingRes.data || [];
   } catch (err) {
     console.error('Error fetching data:', err);
     showToast('Error cargando datos de Supabase', 'error');
     ALL_PRODUCTS = [];
     ALL_RECIPES = [];
+    ALL_INGREDIENTS = [];
   }
   
   renderAllModules();
@@ -481,13 +486,14 @@ let editingRecipeId = null;
 window.openRecipeFormModal = function() {
   editingRecipeId = null;
   document.getElementById('gui-form').reset();
+  document.getElementById('ingredients-container').innerHTML = '';
   const title = document.querySelector('#recipe-form-modal .modal-title');
   if (title) title.textContent = 'Nueva Guía Interactiva';
   const overlay = document.getElementById('recipe-form-overlay');
   if (overlay) overlay.classList.remove('hidden');
 };
 
-window.openEditRecipe = function(e, id) {
+window.openEditRecipe = async function(e, id) {
   if (e) e.stopPropagation();
   editingRecipeId = id;
   const r = ALL_RECIPES.find(x => x.id === id);
@@ -497,6 +503,16 @@ window.openEditRecipe = function(e, id) {
   document.getElementById('r-name').value = r.nombre || '';
   document.getElementById('r-desc').value = r.descripcion || '';
   
+  document.getElementById('ingredients-container').innerHTML = '';
+  try {
+    const { data: detalles } = await supabase.from('receta_detalle').select('*').eq('receta_id', id);
+    if (detalles && detalles.length > 0) {
+      detalles.forEach(d => window.addIngredientRow(d));
+    }
+  } catch(err) {
+    console.error("Error cargando detalles", err);
+  }
+
   const title = document.querySelector('#recipe-form-modal .modal-title');
   if (title) title.textContent = 'Editar Guía Interactiva';
   const overlay = document.getElementById('recipe-form-overlay');
@@ -509,6 +525,51 @@ window.closeRecipeFormModal = function(e) {
   if (overlay) overlay.classList.add('hidden');
 };
 
+window.addIngredientRow = function(data = null) {
+  const container = document.getElementById('ingredients-container');
+  const row = document.createElement('div');
+  row.className = 'ingredient-row form-group';
+  row.style.display = 'flex';
+  row.style.gap = '10px';
+  row.style.alignItems = 'center';
+  row.style.marginBottom = '0';
+
+  const select = document.createElement('select');
+  select.className = 'form-input ing-select';
+  select.style.flex = '2';
+  select.required = true;
+  select.innerHTML = '<option value="">Seleccionar ingrediente...</option>' + 
+    ALL_INGREDIENTS.map(i => `<option value="${i.id}">${i.nombre} (${i.unidad})</option>`).join('');
+
+  const input = document.createElement('input');
+  input.className = 'form-input ing-qty';
+  input.type = 'number';
+  input.step = '0.01';
+  input.min = '0.01';
+  input.placeholder = 'Cantidad';
+  input.style.flex = '1';
+  input.required = true;
+
+  if (data) {
+    select.value = data.ingrediente_id;
+    input.value = data.cantidad;
+  }
+
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'btn btn-ghost';
+  btn.style.color = 'var(--red)';
+  btn.style.padding = '10px 15px';
+  btn.textContent = '✕';
+  btn.onclick = () => container.removeChild(row);
+
+  row.appendChild(select);
+  row.appendChild(input);
+  row.appendChild(btn);
+
+  container.appendChild(row);
+};
+
 window.saveRecipe = async function(e) {
   e.preventDefault();
   const receta = {
@@ -516,16 +577,39 @@ window.saveRecipe = async function(e) {
     descripcion: document.getElementById('r-desc').value
   };
 
+  const ingRows = Array.from(document.querySelectorAll('.ingredient-row'));
+  const ingredientesData = ingRows.map(row => {
+    return {
+      ingrediente_id: row.querySelector('.ing-select').value,
+      cantidad: parseFloat(row.querySelector('.ing-qty').value)
+    };
+  });
+
   try {
-    let error;
+    let error, savedRecipeId;
     if (editingRecipeId) {
-      const res = await supabase.from('recetas').update(receta).eq('id', editingRecipeId);
+      const res = await supabase.from('recetas').update(receta).eq('id', editingRecipeId).select();
       error = res.error;
+      if (!error && res.data) savedRecipeId = res.data[0].id;
     } else {
-      const res = await supabase.from('recetas').insert([receta]);
+      const res = await supabase.from('recetas').insert([receta]).select();
       error = res.error;
+      if (!error && res.data) savedRecipeId = res.data[0].id;
     }
     if (error) throw error;
+
+    if (savedRecipeId) {
+      if (editingRecipeId) {
+        const { error: errDel } = await supabase.from('receta_detalle').delete().eq('receta_id', savedRecipeId);
+        if (errDel) console.error("Error deleting old details", errDel);
+      }
+      if (ingredientesData.length > 0) {
+        const detailsToInsert = ingredientesData.map(d => ({ ...d, receta_id: savedRecipeId }));
+        const { error: errIns } = await supabase.from('receta_detalle').insert(detailsToInsert);
+        if (errIns) console.error("Error inserting details", errIns);
+      }
+    }
+
     showToast(editingRecipeId ? 'Guía actualizada' : 'Guía creada con éxito');
     window.closeRecipeFormModal(null);
     await loadData();
@@ -559,12 +643,16 @@ window.confirmDelete = async function() {
   
   try {
     const { error } = await supabase.from(table).delete().eq('id', id);
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase delete error:', error);
+      throw error;
+    }
     showToast(`${type === 'receta' ? 'Guía' : 'Producto'} eliminado con éxito`);
     window.closeDeleteModal(null);
     await loadData();
   } catch(err) {
     console.error('Error deleting:', err);
-    showToast('Error al eliminar', 'error');
+    const msg = err.message || 'Error al eliminar';
+    showToast(msg, 'error');
   }
 };

@@ -1358,30 +1358,344 @@ ul, ol { list-style: none; }
 }
 
 /* =============================================
-   RESPONSIVE
+   RESPONSIVE — Mobile First
    ============================================= */
 @media (max-width: 1024px) {
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
 }
+
 @media (max-width: 768px) {
   .topbar { display: flex; }
+  
   .sidebar {
     transform: translateX(-100%);
     top: var(--topbar-h);
     height: calc(100vh - var(--topbar-h));
+    width: 280px;
   }
-  .sidebar.open { transform: translateX(0); }
-  .main-content { margin-left: 0; padding: 72px 16px 24px; }
-  .module-header { flex-direction: column; align-items: flex-start; }
+  
+  .sidebar.open { 
+    transform: translateX(0); 
+    box-shadow: 10px 0 40px rgba(0, 0, 0, 0.5);
+  }
+  
+  .main-content { 
+    margin-left: 0; 
+    padding: 80px 16px 24px; 
+  }
+  
+  .module-header { 
+    flex-direction: column; 
+    align-items: flex-start; 
+    gap: 12px;
+  }
+  
+  .module-title {
+    font-size: 18px;
+  }
+  
+  .module-subtitle {
+    font-size: 11px;
+  }
+  
   .recipe-detail-body { grid-template-columns: 1fr; }
-  .form-grid { grid-template-columns: 1fr; }
-  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  
+  .stats-grid { 
+    grid-template-columns: repeat(2, 1fr); 
+    gap: 10px;
+  }
+  
+  .stat-card {
+    padding: 16px;
+  }
+  
+  .stat-value {
+    font-size: 24px;
+  }
+  
+  .stat-label {
+    font-size: 9px;
+  }
+  
+  .toolbar { 
+    flex-direction: column; 
+    align-items: stretch; 
+    gap: 10px;
+  }
+  
+  .search-box {
+    min-width: 100%;
+  }
+  
+  .filter-group {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  
+  .filter-btn {
+    padding: 8px 12px;
+    font-size: 11px;
+  }
+  
+  .product-cards-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  
+  /* Modales responsive - Formularios compactos */
+  .modal {
+    max-width: 100%;
+    width: calc(100% - 20px);
+    margin: 10px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  .modal-header {
+    padding: 12px 16px;
+  }
+  
+  .modal-title {
+    font-size: 14px;
+  }
+  
+  .modal-close {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+  
+  .modal-form {
+    padding: 12px 16px 16px;
+  }
+  
+  .form-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  
+  .form-group {
+    width: 100%;
+    gap: 4px;
+  }
+  
+  .form-label {
+    font-size: 9px;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+  }
+  
+  .form-input {
+    padding: 10px 12px;
+    font-size: 14px;
+    border-radius: 6px;
+  }
+  
+  textarea.form-input {
+    min-height: 60px;
+    font-size: 14px;
+  }
+  
+  .modal-actions {
+    flex-direction: row;
+    gap: 8px;
+    padding: 12px 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  
+  .modal-actions .btn {
+    flex: 1;
+    justify-content: center;
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+  
+  /* Descongelación tabs responsive */
+  .descon-tabs {
+    gap: 4px;
+  }
+  
+  .descon-tab {
+    flex: 1;
+    justify-content: center;
+    padding: 12px 10px;
+    font-size: 12px;
+  }
+  
+  .tab-icon {
+    display: none;
+  }
+  
+  .descongelacion-table-container {
+    margin-top: 16px;
+    border-radius: var(--radius-sm);
+  }
+  
+  .descongelacion-table th,
+  .descongelacion-table td {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+  
+  .action-btns {
+    flex-wrap: wrap;
+  }
+  
+  .action-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+  
+  /* Botón principal más grande en móvil */
+  .module-header .btn-primary {
+    width: 100%;
+    justify-content: center;
+    padding: 14px 20px;
+  }
 }
+
 @media (max-width: 480px) {
-  .stats-grid { grid-template-columns: 1fr; }
-  .toolbar { flex-direction: column; align-items: stretch; }
+  .stats-grid { 
+    grid-template-columns: 1fr 1fr; 
+    gap: 6px;
+  }
+  
+  .stat-card {
+    padding: 10px;
+    border-radius: var(--radius-sm);
+  }
+  
+  .stat-value {
+    font-size: 18px;
+  }
+  
+  .stat-label {
+    font-size: 8px;
+  }
+  
+  .sidebar {
+    width: 100%;
+  }
+  
+  .logo-brand {
+    font-size: 14px;
+    letter-spacing: 2px;
+  }
+  
+  .logo-sub {
+    font-size: 7px;
+  }
+  
+  .nav-item {
+    padding: 12px 14px;
+    font-size: 12px;
+  }
+  
+  .sidebar-time {
+    font-size: 18px;
+  }
+  
+  .delete-msg {
+    font-size: 12px;
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+  
+  .descongelacion-table {
+    font-size: 10px;
+  }
+  
+  .descongelacion-table th,
+  .descongelacion-table td {
+    padding: 6px 8px;
+  }
+  
+  .estado-badge,
+  .tipo-badge {
+    padding: 2px 6px;
+    font-size: 8px;
+  }
+  
+  /* Formulario ultra compacto para pantallas pequeñas */
+  .modal {
+    width: calc(100% - 10px);
+    margin: 5px;
+    max-height: 95vh;
+    border-radius: 10px;
+  }
+  
+  .modal-header {
+    padding: 10px 12px;
+  }
+  
+  .modal-title {
+    font-size: 13px;
+  }
+  
+  .modal-form {
+    padding: 10px 12px 12px;
+  }
+  
+  .form-grid {
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  
+  .form-label {
+    font-size: 8px;
+  }
+  
+  .form-input {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+  
+  textarea.form-input {
+    min-height: 50px;
+  }
+  
+  .modal-actions {
+    flex-direction: column;
+    padding: 10px 12px;
+    gap: 6px;
+  }
+  
+  .modal-actions .btn {
+    padding: 10px;
+    font-size: 12px;
+  }
+  
+  .descon-tab {
+    padding: 10px 8px;
+    font-size: 11px;
+  }
+  
+  .module-header .btn-primary {
+    padding: 12px 16px;
+    font-size: 13px;
+  }
 }
 
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--dark3); border-radius: 2px; }
+
+/* Mejoras scroll en móviles */
+@media (max-width: 768px) {
+  .modal {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .modal-form {
+    overflow-y: auto;
+    max-height: calc(90vh - 100px);
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .modal-form::-webkit-scrollbar {
+    display: none;
+  }
+}

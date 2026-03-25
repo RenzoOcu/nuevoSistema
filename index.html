@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Listo POS · Gestión de Inventario</title>
-  <meta name="description" content="Sistema profesional de gestión de inventario para minimarket Listo. Control de productos perecibles, fechas de vencimiento y recetas de preparación." />
+  <title>Listo Ovalo La Marina · Gestión de Inventario</title>
+  <meta name="description" content="Sistema hecho por Renzo.O - Gestión de inventario para Ovalo La Marina. Control de productos perecibles, fechas de vencimiento y recetas de preparación." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -17,7 +17,7 @@
     <div class="sidebar-logo">
       <div>
         <span class="logo-brand">LISTO</span>
-        <span class="logo-sub">Minimarket POS</span>
+        <span class="logo-sub">Ovalo La Marina</span>
       </div>
     </div>
 
@@ -38,11 +38,16 @@
       <button class="nav-item" id="nav-preparados" onclick="showModule('preparados')" aria-label="Preparados">
         <span class="nav-label">Preparados</span>
       </button>
+      <button class="nav-item" id="nav-descongelacion" onclick="showModule('descongelacion')" aria-label="Descongelación">
+        <span class="nav-label">Descongelación</span>
+        <span class="nav-badge" id="descon-badge">0</span>
+      </button>
     </nav>
 
     <div class="sidebar-footer">
       <div class="sidebar-time" id="sidebar-time"></div>
       <div class="sidebar-date" id="sidebar-date"></div>
+      <div class="sidebar-credits" style="font-size: 9px; color: var(--grey); margin-top: 8px; text-align: center;">Sistema hecho por Renzo.O</div>
     </div>
   </aside>
 
@@ -51,7 +56,7 @@
     <button class="menu-toggle" id="menu-toggle" onclick="toggleSidebar()" aria-label="Menú">
       <span></span><span></span><span></span>
     </button>
-    <span class="topbar-title">Listo POS</span>
+    <span class="topbar-title">LISTO Ovalo La Marina</span>
     <div class="topbar-alerts">
       <span class="topbar-badge" id="topbar-badge">0</span>
       <span>⚠️</span>
@@ -306,6 +311,161 @@
       </div>
     </section>
 
+    <!-- ── MODULE: RECEPCIÓN Y DESCONGELACIÓN ── -->
+    <section class="module hidden" id="module-descongelacion">
+      <div class="module-header">
+        <div>
+          <h1 class="module-title">Recepción y Descongelación</h1>
+          <p class="module-subtitle">Control de temperatura: Proveedor → Refrigeración → Descongelación</p>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="descon-tabs">
+        <button class="descon-tab active" id="tab-recepcion" onclick="switchDesconTab('recepcion')">
+          <span class="tab-icon">📦</span>
+          <span>Recepción / Refrigeración</span>
+        </button>
+        <button class="descon-tab" id="tab-descongelacion" onclick="switchDesconTab('descongelacion')">
+          <span class="tab-icon">❄️</span>
+          <span>Descongelación</span>
+        </button>
+      </div>
+
+      <!-- TAB: RECEPCIÓN / REFRIGERACIÓN -->
+      <div class="descon-tab-content" id="content-recepcion">
+        <div class="module-header" style="margin-top: 20px;">
+          <div>
+            <h2 class="section-title">Productos Recibidos del Proveedor</h2>
+            <p class="module-subtitle">Almacén en refrigeración - Esperando proceso de descongelación</p>
+          </div>
+          <button class="btn btn-primary" onclick="openRecepcionModal()">+ Registrar Recepción</button>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+          <div class="stat-card" id="stat-total-recep">
+            <span class="stat-label">Total Recibidos</span>
+            <span class="stat-value" id="stat-total-recep-val">0</span>
+          </div>
+          <div class="stat-card stat-info" id="stat-en-refrigeracion">
+            <span class="stat-label">En Refrigeración</span>
+            <span class="stat-value" id="stat-en-refrigeracion-val">0</span>
+          </div>
+          <div class="stat-card stat-warn" id="stat-listo-descon">
+            <span class="stat-label">Listo para Descongelar</span>
+            <span class="stat-value" id="stat-listo-descon-val">0</span>
+          </div>
+        </div>
+
+        <!-- Search -->
+        <div class="toolbar">
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="recepcion-search" class="search-input" placeholder="Buscar producto..." oninput="filterRecepcion()" />
+          </div>
+          <div class="filter-group">
+            <button class="filter-btn active" data-filter="all" onclick="setRecepcionFilter('all', this)">Todos</button>
+            <button class="filter-btn" data-filter="en_refrigeracion" onclick="setRecepcionFilter('en_refrigeracion', this)">En Refrigeración</button>
+            <button class="filter-btn" data-filter="listo" onclick="setRecepcionFilter('listo', this)">Listo para Descongelar</button>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="descongelacion-table-container">
+          <table class="descongelacion-table">
+            <thead>
+              <tr>
+                <th>ID Posición</th>
+                <th>Producto</th>
+                <th>F.V Empaque</th>
+                <th>Fecha Recepción</th>
+                <th>Hora Recepción</th>
+                <th>Días en Refrigeración</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="recepcion-table-body"></tbody>
+          </table>
+          <div class="empty-state hidden" id="recepcion-empty">
+            <span class="empty-icon">📦</span>
+            <p>No hay productos recibidos</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: DESCONGELACIÓN -->
+      <div class="descon-tab-content hidden" id="content-descongelacion">
+        <div class="module-header" style="margin-top: 20px;">
+          <div>
+            <h2 class="section-title">Proceso de Descongelación</h2>
+            <p class="module-subtitle">Productos en proceso de descongelación para preparación</p>
+          </div>
+          <button class="btn btn-primary" onclick="openDescongelacionModal()">+ Nueva Descongelación</button>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+          <div class="stat-card" id="stat-total-descon">
+            <span class="stat-label">Total en Descongelación</span>
+            <span class="stat-value" id="stat-total-descon-val">0</span>
+          </div>
+          <div class="stat-card stat-info" id="stat-activos-descon">
+            <span class="stat-label">En Proceso</span>
+            <span class="stat-value" id="stat-activos-descon-val">0</span>
+          </div>
+          <div class="stat-card stat-success" id="stat-completados-descon">
+            <span class="stat-label">Completados</span>
+            <span class="stat-value" id="stat-completados-descon-val">0</span>
+          </div>
+          <div class="stat-card stat-danger" id="stat-anulados-descon">
+            <span class="stat-label">Anulados</span>
+            <span class="stat-value" id="stat-anulados-descon-val">0</span>
+          </div>
+        </div>
+
+        <!-- Search -->
+        <div class="toolbar">
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="descon-search-input" class="search-input" placeholder="Buscar producto..." oninput="filterDescongelacion()" />
+          </div>
+          <div class="filter-group">
+            <button class="filter-btn active" data-filter="all" onclick="setDescongelacionFilter('all', this)">Todos</button>
+            <button class="filter-btn" data-filter="en_proceso" onclick="setDescongelacionFilter('en_proceso', this)">En Proceso</button>
+            <button class="filter-btn" data-filter="completado" onclick="setDescongelacionFilter('completado', this)">Completados</button>
+            <button class="filter-btn" data-filter="anulado" onclick="setDescongelacionFilter('anulado', this)">Anulados</button>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="descongelacion-table-container">
+          <table class="descongelacion-table">
+            <thead>
+              <tr>
+                <th>ID Posición</th>
+                <th>Producto</th>
+                <th>F.V Empaque</th>
+                <th>Origen Recepción</th>
+                <th>Fecha Inicio</th>
+                <th>Hora Inicio</th>
+                <th>Fecha Fin</th>
+                <th>Hora Fin</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="descongelacion-table-body"></tbody>
+          </table>
+          <div class="empty-state hidden" id="descongelacion-empty">
+            <span class="empty-icon">❄️</span>
+            <p>No hay procesos de descongelación</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
   </main>
 
   <!-- ===== PRODUCT MODAL ===== -->
@@ -388,6 +548,150 @@
         <div class="modal-actions">
           <button type="button" class="btn btn-ghost" onclick="closeRecipeFormModal(null)">Cancelar</button>
           <button type="submit" class="btn btn-primary">Guardar Guía</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== RECEPCIÓN MODAL ===== -->
+  <div class="modal-overlay hidden" id="recepcion-modal-overlay" onclick="closeRecepcionModal(event)">
+    <div class="modal" id="recepcion-modal" role="dialog" aria-modal="true" aria-labelledby="recepcion-modal-title">
+      <div class="modal-header">
+        <h2 class="modal-title" id="recepcion-modal-title">Registrar Recepción de Producto</h2>
+        <button class="modal-close" onclick="closeRecepcionModal(null)" aria-label="Cerrar">✕</button>
+      </div>
+      <form class="modal-form" id="recepcion-form" onsubmit="saveRecepcion(event)">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="r-id-posicion">ID Posición</label>
+            <input class="form-input" id="r-id-posicion" type="number" min="1" placeholder="Ej: 1" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="r-proveedor">Proveedor</label>
+            <input class="form-input" id="r-proveedor" type="text" placeholder="Ej: Distribuidora ABC" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="r-producto">Producto *</label>
+            <input class="form-input" id="r-producto" type="text" placeholder="Ej: Emp. Pollo" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="r-vencimiento-empaque">F.V Empaque *</label>
+            <input class="form-input" id="r-vencimiento-empaque" type="date" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="r-cantidad">Cantidad</label>
+            <input class="form-input" id="r-cantidad" type="number" min="1" placeholder="1" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="r-unidad">Unidad</label>
+            <select class="form-input" id="r-unidad">
+              <option value="kg">Kilogramos (kg)</option>
+              <option value="unidad">Unidades</option>
+              <option value="paquete">Paquetes</option>
+              <option value="caja">Cajas</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="r-fecha-recepcion">Fecha de Recepción *</label>
+            <input class="form-input" id="r-fecha-recepcion" type="date" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="r-hora-recepcion">Hora de Recepción *</label>
+            <input class="form-input" id="r-hora-recepcion" type="time" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="r-temperatura">Temperatura de Recepción (°C)</label>
+            <input class="form-input" id="r-temperatura" type="number" step="0.1" placeholder="Ej: 4" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="r-estado">Estado *</label>
+            <select class="form-input" id="r-estado" required>
+              <option value="en_refrigeracion">En Refrigeración</option>
+              <option value="listo">Listo para Descongelar</option>
+              <option value="anulado">Anulado</option>
+            </select>
+          </div>
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label class="form-label" for="r-notas">Notas</label>
+            <textarea class="form-input" id="r-notas" rows="2" placeholder="Observaciones: embalaje, estado, etc..."></textarea>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" onclick="closeRecepcionModal(null)">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar Recepción</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== DESCONGELACIÓN MODAL ===== -->
+  <div class="modal-overlay hidden" id="descongelacion-modal-overlay" onclick="closeDescongelacionModal(event)">
+    <div class="modal" id="descongelacion-modal" role="dialog" aria-modal="true" aria-labelledby="descongelacion-modal-title">
+      <div class="modal-header">
+        <h2 class="modal-title" id="descongelacion-modal-title">Iniciar Descongelación</h2>
+        <button class="modal-close" onclick="closeDescongelacionModal(null)" aria-label="Cerrar">✕</button>
+      </div>
+      <form class="modal-form" id="descongelacion-form" onsubmit="saveDescongelacion(event)">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="d-id-posicion">ID Posición</label>
+            <input class="form-input" id="d-id-posicion" type="number" min="1" placeholder="Ej: 1" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="d-recepcion-id">Origen (Recepción)</label>
+            <select class="form-input" id="d-recepcion-id">
+              <option value="">Seleccionar producto recibido...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="d-producto">Producto *</label>
+            <input class="form-input" id="d-producto" type="text" placeholder="Ej: Emp. Pollo" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="d-vencimiento-empaque">F.V Empaque *</label>
+            <input class="form-input" id="d-vencimiento-empaque" type="date" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="d-fecha-inicio">Fecha Inicio Descongelación *</label>
+            <input class="form-input" id="d-fecha-inicio" type="date" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="d-hora-inicio">Hora Inicio *</label>
+            <input class="form-input" id="d-hora-inicio" type="time" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="d-fecha-fin">Fecha Fin (Programada)</label>
+            <input class="form-input" id="d-fecha-fin" type="date" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="d-hora-fin">Hora Fin (Programada)</label>
+            <input class="form-input" id="d-hora-fin" type="time" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="d-metodo">Método de Descongelación</label>
+            <select class="form-input" id="d-metodo">
+              <option value="refrigerador">Refrigerador (lento)</option>
+              <option value="agua_fria">Agua fría</option>
+              <option value="microondas">Microondas</option>
+              <option value="ambiente">Temperatura ambiente</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="d-estado">Estado *</label>
+            <select class="form-input" id="d-estado" required>
+              <option value="en_proceso">En Proceso</option>
+              <option value="completado">Completado</option>
+              <option value="anulado">Anulado</option>
+            </select>
+          </div>
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label class="form-label" for="d-notas">Notas</label>
+            <textarea class="form-input" id="d-notas" rows="2" placeholder="Observaciones del proceso..."></textarea>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" onclick="closeDescongelacionModal(null)">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Iniciar Descongelación</button>
         </div>
       </form>
     </div>

@@ -1,74 +1,26 @@
 /* =====================================================
-   LISTO OVALO LA MARINA — Premium Minimalist Design
+   LISTO OVALO LA MARINA — Minimalist Design
    Sistema hecho por Renzo.O
    ===================================================== */
 
 :root {
   --yellow:  #FFD100;
-  --yellow-glow: rgba(255, 209, 0, 0.3);
   --black:   #0D0D0D;
   --dark:    #131313;
   --dark2:   #1C1C1C;
   --dark3:   #262626;
   --dark4:   #303030;
   --white:   #FFFFFF;
-  --white-muted: rgba(255, 255, 255, 0.7);
   --grey:    #666;
   --grey-lt: #999;
   --red:     #FF3B30;
-  --red-glow: rgba(255, 59, 48, 0.3);
   --green:   #34C759;
-  --green-glow: rgba(52, 199, 89, 0.3);
   --blue:    #0A84FF;
-  --blue-glow: rgba(10, 132, 255, 0.3);
 
-  --sidebar-w: 240px;
-  --topbar-h:  60px;
-  --radius:    12px;
-  --radius-sm: 8px;
-  --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-bounce: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
-
-body {
-  font-family: 'Inter', system-ui, sans-serif;
-  background: linear-gradient(135deg, var(--black) 0%, #0a0a0a 100%);
-  color: var(--white);
-  min-height: 100vh;
-  overflow-x: hidden;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-button { 
-  cursor: pointer; 
-  border: none; 
-  background: none; 
-  font-family: inherit; 
-  font-size: 14px;
-  transition: all var(--transition-fast);
-}
-button:active { transform: scale(0.97); }
-
-input, select { 
-  font-family: inherit; 
-  font-size: 14px;
-  transition: all var(--transition-fast);
-}
-
-ul, ol { list-style: none; }
-.hidden { display: none !important; }
-
-/* Selection */
-::selection {
-  background: var(--yellow);
-  color: var(--black);
+  --sidebar-w: 220px;
+  --topbar-h:  56px;
+  --radius:    6px;
+  --transition: 0.15s ease;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -89,174 +41,109 @@ ul, ol { list-style: none; }
 .hidden { display: none !important; }
 
 /* =============================================
-   SIDEBAR — Premium Glass Design
+   SIDEBAR
    ============================================= */
 .sidebar {
   position: fixed;
   left: 0; top: 0;
   width: var(--sidebar-w);
   height: 100vh;
-  background: rgba(19, 19, 19, 0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--dark);
+  border-right: 1px solid var(--dark3);
   display: flex;
   flex-direction: column;
   z-index: 100;
-  transition: transform var(--transition), box-shadow var(--transition);
+  transition: transform var(--transition);
 }
 
 .sidebar-logo {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 24px 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  position: relative;
-  overflow: hidden;
+  gap: 10px;
+  padding: 22px 20px;
+  border-bottom: 1px solid var(--dark3);
 }
-
-.sidebar-logo::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 60%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--yellow), transparent);
-  opacity: 0.5;
-}
-
-.logo-icon { font-size: 20px; }
+.logo-icon { font-size: 18px; }
 .logo-brand {
   display: block;
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 800;
   color: var(--yellow);
-  letter-spacing: 4px;
+  letter-spacing: 3px;
   line-height: 1;
-  text-shadow: 0 0 20px var(--yellow-glow);
-  animation: logoPulse 3s ease-in-out infinite;
 }
-
-@keyframes logoPulse {
-  0%, 100% { text-shadow: 0 0 20px var(--yellow-glow); }
-  50% { text-shadow: 0 0 30px var(--yellow-glow), 0 0 40px var(--yellow-glow); }
-}
-
 .logo-sub {
   display: block;
   font-size: 9px;
   color: var(--grey);
-  letter-spacing: 2px;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
-  margin-top: 4px;
+  margin-top: 3px;
 }
 
 .sidebar-nav {
   flex: 1;
-  padding: 16px 12px;
+  padding: 12px 10px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 1px;
 }
 
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  border-radius: var(--radius-sm);
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 4px;
   color: var(--grey-lt);
   font-size: 13px;
   font-weight: 500;
   transition: all var(--transition);
   position: relative;
-  overflow: hidden;
+  text-align: left;
+  width: 100%;
+  letter-spacing: 0.2px;
 }
-
-.nav-item::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%) scaleY(0);
-  width: 3px;
-  height: 60%;
-  background: var(--yellow);
-  border-radius: 0 3px 3px 0;
-  transition: transform var(--transition-fast);
-}
-
-.nav-item:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--white);
-  transform: translateX(4px);
-}
-
-.nav-item:hover::before {
-  transform: translateY(-50%) scaleY(1);
-}
-
-.nav-item.active {
-  background: rgba(255, 209, 0, 0.1);
-  color: var(--yellow);
-  font-weight: 600;
-}
-
-.nav-item.active::before {
-  transform: translateY(-50%) scaleY(1);
-}
+.nav-item:hover { background: var(--dark2); color: var(--white); }
+.nav-item.active { background: var(--yellow); color: var(--black); font-weight: 600; }
   position: relative;
   text-align: left;
   width: 100%;
   letter-spacing: 0.2px;
 }
-.nav-icon { font-size: 16px; width: 20px; text-align: center; }
+.nav-icon { font-size: 14px; width: 18px; text-align: center; }
 .nav-label { flex: 1; }
 .nav-badge {
-  background: linear-gradient(135deg, var(--red) 0%, #ff6b5a 100%);
+  background: var(--red);
   color: var(--white);
   font-size: 10px;
   font-weight: 700;
-  min-width: 20px;
-  height: 20px;
-  border-radius: 10px;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 6px;
-  animation: badgePulse 2s ease-in-out infinite;
-  box-shadow: 0 2px 8px var(--red-glow);
+  padding: 0 5px;
 }
-
-@keyframes badgePulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-}
-
 .nav-badge[data-count="0"] { display: none; }
 
 .sidebar-footer {
-  padding: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-  text-align: center;
+  padding: 16px 20px;
+  border-top: 1px solid var(--dark3);
 }
 .sidebar-time {
-  font-size: 24px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--yellow);
-  letter-spacing: 2px;
+  letter-spacing: 1px;
   font-variant-numeric: tabular-nums;
-  text-shadow: 0 0 20px var(--yellow-glow);
 }
 .sidebar-date {
   font-size: 11px;
   color: var(--grey);
-  margin-top: 4px;
+  margin-top: 2px;
   text-transform: capitalize;
-  letter-spacing: 0.5px;
 }
 
 /* =============================================
@@ -1445,14 +1332,14 @@ ul, ol { list-style: none; }
   /* Modales responsive - Formularios compactos */
   .modal {
     max-width: 100%;
-    width: calc(100% - 20px);
-    margin: 10px;
-    max-height: 90vh;
+    width: calc(100% - 16px);
+    margin: 8px;
+    max-height: 92vh;
     overflow-y: auto;
   }
   
   .modal-header {
-    padding: 12px 16px;
+    padding: 10px 14px;
   }
   
   .modal-title {
@@ -1460,54 +1347,54 @@ ul, ol { list-style: none; }
   }
   
   .modal-close {
-    width: 28px;
-    height: 28px;
-    font-size: 12px;
+    width: 26px;
+    height: 26px;
+    font-size: 11px;
   }
   
   .modal-form {
-    padding: 12px 16px 16px;
+    padding: 10px 14px 14px;
   }
   
   .form-grid {
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 16px;
+    gap: 8px;
+    margin-bottom: 12px;
   }
   
   .form-group {
     width: 100%;
-    gap: 4px;
+    gap: 3px;
   }
   
   .form-label {
     font-size: 9px;
-    letter-spacing: 0.5px;
-    margin-bottom: 2px;
+    letter-spacing: 0.3px;
+    margin-bottom: 1px;
   }
   
   .form-input {
-    padding: 10px 12px;
+    padding: 9px 10px;
     font-size: 14px;
-    border-radius: 6px;
+    border-radius: 5px;
   }
   
   textarea.form-input {
-    min-height: 60px;
+    min-height: 50px;
     font-size: 14px;
   }
   
   .modal-actions {
     flex-direction: row;
     gap: 8px;
-    padding: 12px 16px;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 10px 14px;
+    border-top: 1px solid var(--dark3);
   }
   
   .modal-actions .btn {
     flex: 1;
     justify-content: center;
-    padding: 10px 12px;
+    padding: 9px 10px;
     font-size: 12px;
   }
   
@@ -1620,27 +1507,34 @@ ul, ol { list-style: none; }
   
   /* Formulario ultra compacto para pantallas pequeñas */
   .modal {
-    width: calc(100% - 10px);
-    margin: 5px;
-    max-height: 95vh;
-    border-radius: 10px;
+    width: calc(100% - 8px);
+    margin: 4px;
+    max-height: 96vh;
+    border-radius: 8px;
   }
   
   .modal-header {
-    padding: 10px 12px;
+    padding: 8px 10px;
   }
   
   .modal-title {
     font-size: 13px;
   }
   
+  .modal-close {
+    width: 24px;
+    height: 24px;
+    font-size: 10px;
+  }
+  
   .modal-form {
-    padding: 10px 12px 12px;
+    padding: 8px 10px 10px;
   }
   
   .form-grid {
-    gap: 8px;
-    margin-bottom: 12px;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 10px;
   }
   
   .form-label {
@@ -1648,33 +1542,34 @@ ul, ol { list-style: none; }
   }
   
   .form-input {
-    padding: 8px 10px;
+    padding: 7px 8px;
     font-size: 13px;
   }
   
   textarea.form-input {
-    min-height: 50px;
+    min-height: 40px;
+    font-size: 13px;
   }
   
   .modal-actions {
-    flex-direction: column;
-    padding: 10px 12px;
+    flex-direction: row;
+    padding: 8px 10px;
     gap: 6px;
   }
   
   .modal-actions .btn {
-    padding: 10px;
-    font-size: 12px;
+    padding: 8px 6px;
+    font-size: 11px;
   }
   
   .descon-tab {
-    padding: 10px 8px;
+    padding: 10px 6px;
     font-size: 11px;
   }
   
   .module-header .btn-primary {
-    padding: 12px 16px;
-    font-size: 13px;
+    padding: 10px 14px;
+    font-size: 12px;
   }
 }
 

@@ -1239,9 +1239,262 @@ ul, ol { list-style: none; }
   box-shadow: 0 4px 15px var(--green-glow);
 }
 
-.stat-card.stat-success {
-  background: linear-gradient(135deg, rgba(52,199,89,0.1) 0%, rgba(52,199,89,0.05) 100%);
-  border-left: 3px solid var(--green);
+/* =============================================
+   NOTAS POR TURNOS — Comunicación interna
+   ============================================= */
+.notas-tabs {
+  display: flex;
+  gap: 8px;
+  margin-top: 24px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.notas-tab {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--grey-lt);
+  background: var(--dark);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  position: relative;
+}
+
+.notas-tab:hover {
+  color: var(--white);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.notas-tab.active {
+  color: var(--yellow);
+  border-color: var(--yellow);
+  background: rgba(255, 209, 0, 0.05);
+  font-weight: 600;
+}
+
+.notas-tab .tab-icon {
+  font-size: 18px;
+  transition: transform var(--transition-fast);
+}
+
+.notas-tab:hover .tab-icon {
+  transform: scale(1.2);
+}
+
+.notas-count {
+  background: var(--red);
+  color: var(--white);
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  margin-left: auto;
+}
+
+.notas-count:empty,
+.notas-count[data-count="0"] {
+  display: none;
+}
+
+.notas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.nota-card {
+  background: linear-gradient(135deg, var(--dark) 0%, rgba(28, 28, 28, 0.8) 100%);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-radius: var(--radius);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  position: relative;
+  overflow: hidden;
+  transition: all var(--transition);
+}
+
+.nota-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(255, 209, 0, 0.03) 0%, transparent 50%);
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+
+.nota-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.nota-card:hover::before {
+  opacity: 1;
+}
+
+.nota-leida {
+  opacity: 0.7;
+  border-left: 3px solid var(--grey);
+}
+
+.nota-no-leida {
+  border-left: 3px solid var(--yellow);
+  animation: notaPulse 2s ease-in-out infinite;
+}
+
+@keyframes notaPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 209, 0, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 15px 3px rgba(255, 209, 0, 0.1);
+  }
+}
+
+.nota-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.nota-prioridad {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.nota-estado {
+  font-size: 10px;
+  color: var(--grey);
+  font-weight: 500;
+}
+
+.nota-titulo {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--white);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.nota-contenido {
+  font-size: 13px;
+  color: var(--grey-lt);
+  line-height: 1.6;
+  margin: 0;
+  flex: 1;
+}
+
+.nota-footer {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nota-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--grey);
+}
+
+.nota-autor {
+  font-size: 11px;
+  color: var(--yellow);
+  font-weight: 500;
+}
+
+.nota-fecha {
+  font-size: 10px;
+  color: var(--grey);
+}
+
+.nota-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+/* Responsive para notas */
+@media (max-width: 768px) {
+  .notas-tabs {
+    gap: 6px;
+  }
+  
+  .notas-tab {
+    flex: 1;
+    justify-content: center;
+    padding: 12px 10px;
+    font-size: 12px;
+  }
+  
+  .notas-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .nota-card {
+    padding: 16px;
+  }
+  
+  .nota-titulo {
+    font-size: 14px;
+  }
+  
+  .nota-contenido {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .notas-tab {
+    padding: 10px 6px;
+    font-size: 11px;
+  }
+  
+  .notas-tab .tab-icon {
+    display: none;
+  }
+  
+  .nota-card {
+    padding: 12px;
+  }
+  
+  .nota-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .nota-meta {
+    flex-direction: column;
+    gap: 4px;
+  }
 }
 
 /* =============================================

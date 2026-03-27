@@ -12,6 +12,8 @@ let ALL_RECIPES = [];
 let ALL_INGREDIENTS = [];
 let ALL_RECEPCION = [];
 let ALL_DESCONGELACION = [];
+let ALL_SALIDA = [];
+let ALL_NOTAS = [];
 
 // Start app exactly when DOM is ready
 if (document.readyState === 'loading') {
@@ -76,12 +78,14 @@ function showToast(msg, type = 'success') {
 
 async function loadData() {
   try {
-    const [prodRes, recRes, ingRes, recepRes, descRes] = await Promise.all([
+    const [prodRes, recRes, ingRes, recepRes, descRes, salidaRes, notasRes] = await Promise.all([
       supabase.from('productos').select(`*, recetas(id, nombre)`),
       supabase.from('recetas').select('*'),
       supabase.from('ingredientes').select('*'),
       supabase.from('recepcion_refrigeracion').select('*').order('created_at', { ascending: false }),
-      supabase.from('descongelacion').select('*, recepcion_refrigeracion(id, producto)').order('created_at', { ascending: false })
+      supabase.from('descongelacion').select('*, recepcion_refrigeracion(id, producto)').order('created_at', { ascending: false }),
+      supabase.from('productos_salida').select('*').order('created_at', { ascending: false }),
+      supabase.from('notas_turnos').select('*').order('created_at', { ascending: false })
     ]);
       
     if (prodRes.error) throw prodRes.error;
@@ -89,12 +93,16 @@ async function loadData() {
     if (ingRes.error) throw ingRes.error;
     if (recepRes.error) throw recepRes.error;
     if (descRes.error) throw descRes.error;
+    if (salidaRes.error) throw salidaRes.error;
+    if (notasRes.error) throw notasRes.error;
     
     ALL_PRODUCTS = prodRes.data || [];
     ALL_RECIPES = recRes.data || [];
     ALL_INGREDIENTS = ingRes.data || [];
     ALL_RECEPCION = recepRes.data || [];
     ALL_DESCONGELACION = descRes.data || [];
+    ALL_SALIDA = salidaRes.data || [];
+    ALL_NOTAS = notasRes.data || [];
   } catch (err) {
     console.error('Error fetching data:', err);
     showToast('Error cargando datos de Supabase', 'error');
@@ -103,6 +111,8 @@ async function loadData() {
     ALL_INGREDIENTS = [];
     ALL_RECEPCION = [];
     ALL_DESCONGELACION = [];
+    ALL_SALIDA = [];
+    ALL_NOTAS = [];
   }
   
   renderAllModules();
@@ -144,6 +154,8 @@ function renderAllModules() {
   renderRecipes();
   renderRecepcion();
   renderDescongelacion();
+  renderSalida();
+  renderNotas();
 }
 
 function renderDashboard() {
@@ -1152,5 +1164,418 @@ window.completeDescongelacion = async function(id) {
   } catch (err) {
     console.error('Error completing descongelacion:', err);
     showToast('Error al completar proceso', 'error');
+  }
+};
+
+// ==========================================
+// PRODUCTOS SALIDA
+// ==========================================
+
+let currentSalidaFilter = 'hoy';
+let editingSalidaId = null;
+
+window.setSalidaFilter = function(filterValue, btnElement) {
+  currentSalidaFilter = filterValue;
+  document.querySelectorAll('#content-salida .filter-btn').forEach(b => b.classList.remove('active'));
+  if (btnElement) btnElement.classList.add('active');
+  renderSalida();
+};
+
+window.filterSalida = function() {
+  renderSalida();
+};
+
+function renderSalida() {
+  const searchEl = document.getElementById('salida-search');
+  const query = searchEl ? searchEl.value.toLowerCase() : '';
+  
+  const filtered = ALL_SALIDA.filter(s => {
+    const matchesSearch = (s.producto || '').toLowerCase().includes(query) ||
+                          (s.responsable || '').toLowerCase().includes(query) ||
+                          (s.etiqueta || '').toLowerCase().includes(query);
+    
+    let matchesFilter = true;
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const fechaSalida = new Date(s.fecha_salida);
+    fechaSalida.setHours(0,0,0,0);
+    
+    if (currentSalidaFilter === 'hoy') {
+      matchesFilter = fechaSalida.getTime() === today.getTime();
+    } else if (currentSalidaFilter === 'semana') {
+      const weekAgo = new Date(today);
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      matchesFilter = fechaSalida >= weekAgo;
+    }
+    
+    return matchesSearch && matchesFilter;
+  });
+  
+  // Update stats
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  
+  const totalHoy = ALL_SALIDA.filter(s => {
+    const fechaSalida = new Date(s.fecha_salida);
+    fechaSalida.setHours(0,0,0,0);
+    return fechaSalida.getTime() === today.getTime();
+  }).length;
+  
+  const weekAgo = new Date(today);
+  weekAgo.setDate(weekAgo.getDate() - 7);
+  const totalSemana = ALL_SALIDA.filter(s => {
+    const fechaSalida = new Date(s.fecha_salida);
+    fechaSalida.setHours(0,0,0,0);
+    return fechaSalida >= weekAgo;
+  }).length;
+  
+  const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+  setEl('stat-total-salida-val', totalHoy);
+  setEl('stat-salidas-semana-val', totalSemana);
+  setEl('stat-salidas-pendientes-val', '0'); // Por ahora hardcoded
+  
+  // Update nav badge
+  const badge = document.getElementById('salida-badge');
+  if (badge) {
+    badge.textContent = totalHoy;
+    badge.style.display = totalHoy > 0 ? 'flex' : 'none';
+  }
+  
+  const tbody = document.getElementById('salida-table-body');
+  const empty = document.getElementById('salida-empty');
+  
+  if (!tbody || !empty) return;
+  
+  if (filtered.length === 0) {
+    tbody.innerHTML = '';
+    empty.classList.remove('hidden');
+  } else {
+    empty.classList.add('hidden');
+    tbody.innerHTML = filtered.map(s => generateSalidaRow(s)).join('');
+  }
+}
+
+function generateSalidaRow(s) {
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '-';
+    return new Date(dateStr).toLocaleDateString('es-ES');
+  };
+  
+  const formatTime = (timeStr) => {
+    if (!timeStr) return '-';
+    return timeStr;
+  };
+  
+  const hasFoto = s.foto_url && s.foto_url.trim() !== '';
+  
+  return `
+    <tr>
+      <td><strong>${s.producto || '-'}</strong><br><small style="color: var(--grey)">${s.etiqueta || ''}</small></td>
+      <td>${s.cantidad || '0'} ${s.unidad || 'unidad'}</td>
+      <td>${formatDate(s.fecha_salida)}</td>
+      <td>${formatTime(s.hora_salida)}</td>
+      <td>${s.responsable || '-'}</td>
+      <td>${s.firma_asistente || '-'}</td>
+      <td>${s.fecha_empaque ? formatDate(s.fecha_empaque) : '-'}<br><small>${s.hora_empaque || ''}</small></td>
+      <td>${hasFoto ? `<button class="action-btn edit" onclick="viewSalidaPhoto('${s.id}')" title="Ver Foto">📷</button>` : '-'}</td>
+      <td>
+        <div class="action-btns">
+          <button class="action-btn edit" onclick="openEditSalida('${s.id}')" title="Editar">✏️</button>
+          <button class="action-btn delete" onclick="deleteSalida('${s.id}', '${(s.producto || '').replace(/'/g, "\\'")}')" title="Eliminar">🗑️</button>
+        </div>
+      </td>
+    </tr>
+  `;
+}
+
+window.openSalidaModal = function() {
+  editingSalidaId = null;
+  document.getElementById('salida-form').reset();
+  document.getElementById('salida-modal-title').textContent = 'Registrar Salida de Producto';
+  
+  // Set default dates to today
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('s-fecha-salida').value = today;
+  document.getElementById('s-hora-salida').value = new Date().toTimeString().slice(0, 5);
+  
+  document.getElementById('salida-modal-overlay').classList.remove('hidden');
+};
+
+window.openEditSalida = function(id) {
+  const s = ALL_SALIDA.find(x => x.id === id);
+  if (!s) return;
+  
+  editingSalidaId = id;
+  
+  document.getElementById('s-producto').value = s.producto || '';
+  document.getElementById('s-cantidad').value = s.cantidad || '';
+  document.getElementById('s-unidad').value = s.unidad || 'unidad';
+  document.getElementById('s-fecha-salida').value = s.fecha_salida ? s.fecha_salida.split('T')[0] : '';
+  document.getElementById('s-hora-salida').value = s.hora_salida || '';
+  document.getElementById('s-fecha-empaque').value = s.fecha_empaque ? s.fecha_empaque.split('T')[0] : '';
+  document.getElementById('s-hora-empaque').value = s.hora_empaque || '';
+  document.getElementById('s-responsable').value = s.responsable || '';
+  document.getElementById('s-firma').value = s.firma_asistente || '';
+  document.getElementById('s-etiqueta').value = s.etiqueta || '';
+  document.getElementById('s-motivo').value = s.motivo || 'venta';
+  document.getElementById('s-foto').value = s.foto_url || '';
+  document.getElementById('s-notas').value = s.notas || '';
+  
+  document.getElementById('salida-modal-title').textContent = 'Editar Salida';
+  document.getElementById('salida-modal-overlay').classList.remove('hidden');
+};
+
+window.closeSalidaModal = function(e) {
+  if (e && e.target.id !== 'salida-modal-overlay' && !e.target.classList.contains('modal-close') && !e.target.classList.contains('btn-ghost')) return;
+  document.getElementById('salida-modal-overlay').classList.add('hidden');
+  editingSalidaId = null;
+};
+
+window.saveSalida = async function(e) {
+  e.preventDefault();
+  
+  const record = {
+    producto: document.getElementById('s-producto').value,
+    cantidad: parseFloat(document.getElementById('s-cantidad').value),
+    unidad: document.getElementById('s-unidad').value,
+    fecha_salida: document.getElementById('s-fecha-salida').value,
+    hora_salida: document.getElementById('s-hora-salida').value,
+    fecha_empaque: document.getElementById('s-fecha-empaque').value || null,
+    hora_empaque: document.getElementById('s-hora-empaque').value || null,
+    responsable: document.getElementById('s-responsable').value,
+    firma_asistente: document.getElementById('s-firma').value || null,
+    etiqueta: document.getElementById('s-etiqueta').value || null,
+    motivo: document.getElementById('s-motivo').value,
+    foto_url: document.getElementById('s-foto').value || null,
+    notas: document.getElementById('s-notas').value || null
+  };
+
+  try {
+    let error;
+    if (editingSalidaId) {
+      const res = await supabase.from('productos_salida').update(record).eq('id', editingSalidaId);
+      error = res.error;
+    } else {
+      const res = await supabase.from('productos_salida').insert([record]);
+      error = res.error;
+    }
+    if (error) throw error;
+    
+    showToast(editingSalidaId ? 'Salida actualizada' : 'Salida registrada con éxito');
+    window.closeSalidaModal(null);
+    await loadData();
+  } catch (err) {
+    console.error('Error saving salida:', err);
+    showToast('Error guardando salida', 'error');
+  }
+};
+
+window.deleteSalida = async function(id, name) {
+  if (!confirm(`¿Estás seguro de eliminar la salida de "${name}"?`)) return;
+  
+  try {
+    const { error } = await supabase.from('productos_salida').delete().eq('id', id);
+    if (error) throw error;
+    
+    showToast('Salida eliminada con éxito');
+    await loadData();
+  } catch (err) {
+    console.error('Error deleting salida:', err);
+    showToast('Error eliminando salida', 'error');
+  }
+};
+
+window.viewSalidaPhoto = function(id) {
+  const s = ALL_SALIDA.find(x => x.id === id);
+  if (s && s.foto_url) {
+    window.open(s.foto_url, '_blank');
+  }
+};
+
+// ==========================================
+// NOTAS POR TURNOS
+// ==========================================
+
+let currentTurno = 1;
+let editingNotaId = null;
+
+window.selectTurno = function(turno) {
+  currentTurno = turno;
+  
+  // Update tab buttons
+  document.querySelectorAll('.notas-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-turno-' + turno).classList.add('active');
+  
+  renderNotas();
+};
+
+function renderNotas() {
+  // Update counts for each turno
+  const countTurno1 = ALL_NOTAS.filter(n => n.turno_destino === 1 || n.turno_destino === 0).length;
+  const countTurno2 = ALL_NOTAS.filter(n => n.turno_destino === 2 || n.turno_destino === 0).length;
+  const countTurno3 = ALL_NOTAS.filter(n => n.turno_destino === 3 || n.turno_destino === 0).length;
+  
+  const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+  setEl('notas-count-1', countTurno1);
+  setEl('notas-count-2', countTurno2);
+  setEl('notas-count-3', countTurno3);
+  
+  // Update nav badge
+  const badge = document.getElementById('notas-badge');
+  if (badge) {
+    const currentCount = currentTurno === 1 ? countTurno1 : currentTurno === 2 ? countTurno2 : countTurno3;
+    badge.textContent = currentCount;
+    badge.style.display = currentCount > 0 ? 'flex' : 'none';
+  }
+  
+  // Filter notes for current turno
+  const notasFiltradas = ALL_NOTAS.filter(n => {
+    return n.turno_destino === currentTurno || n.turno_destino === 0;
+  });
+  
+  const grid = document.getElementById('notas-grid');
+  const empty = document.getElementById('notas-empty');
+  
+  if (!grid || !empty) return;
+  
+  if (notasFiltradas.length === 0) {
+    grid.innerHTML = '';
+    empty.classList.remove('hidden');
+  } else {
+    empty.classList.add('hidden');
+    grid.innerHTML = notasFiltradas.map(n => generateNotaCard(n)).join('');
+  }
+}
+
+function generateNotaCard(n) {
+  const prioridadColors = {
+    'baja': 'var(--grey)',
+    'normal': 'var(--blue)',
+    'alta': 'var(--yellow)',
+    'urgente': 'var(--red)'
+  };
+  
+  const prioridadLabels = {
+    'baja': 'Baja',
+    'normal': 'Normal',
+    'alta': 'Alta',
+    'urgente': 'Urgente'
+  };
+  
+  const turnoLabels = {
+    1: 'Turno 1 (Mañana)',
+    2: 'Turno 2 (Tarde)',
+    3: 'Turno 3 (Noche)',
+    0: 'Todos los turnos'
+  };
+  
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '-';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('es-ES') + ' ' + date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  };
+  
+  const leidaClass = n.leida ? 'nota-leida' : 'nota-no-leida';
+  const leidaLabel = n.leida ? '✓ Leída' : 'No leída';
+  
+  return `
+    <div class="nota-card ${leidaClass}">
+      <div class="nota-header">
+        <div class="nota-prioridad" style="background: ${prioridadColors[n.prioridad] || 'var(--grey)'}; color: white;">
+          ${prioridadLabels[n.prioridad] || 'Normal'}
+        </div>
+        <div class="nota-estado">${leidaLabel}</div>
+      </div>
+      <h3 class="nota-titulo">${n.titulo}</h3>
+      <p class="nota-contenido">${n.contenido}</p>
+      <div class="nota-footer">
+        <div class="nota-meta">
+          <span>Origen: ${turnoLabels[n.turno_origen] || '-'}</span>
+          <span>Para: ${turnoLabels[n.turno_destino] || '-'}</span>
+        </div>
+        <div class="nota-autor">Por: ${n.autor}</div>
+        <div class="nota-fecha">${formatDate(n.created_at)}</div>
+      </div>
+      <div class="nota-actions">
+        ${!n.leida ? `<button class="btn btn-ghost" onclick="markNotaAsRead('${n.id}')" style="font-size: 11px; padding: 6px 12px;">Marcar como leída</button>` : ''}
+        <button class="btn btn-ghost" onclick="deleteNota('${n.id}', '${(n.titulo || '').replace(/'/g, "\\'")}')" style="font-size: 11px; padding: 6px 12px; color: var(--red);">Eliminar</button>
+      </div>
+    </div>
+  `;
+}
+
+window.openNotasModal = function() {
+  editingNotaId = null;
+  document.getElementById('notas-form').reset();
+  document.getElementById('notas-modal-title').textContent = 'Nueva Nota para Turnos';
+  
+  // Set default turno origen to current turno
+  document.getElementById('n-turno-origen').value = currentTurno.toString();
+  
+  document.getElementById('notas-modal-overlay').classList.remove('hidden');
+};
+
+window.closeNotasModal = function(e) {
+  if (e && e.target.id !== 'notas-modal-overlay' && !e.target.classList.contains('modal-close') && !e.target.classList.contains('btn-ghost')) return;
+  document.getElementById('notas-modal-overlay').classList.add('hidden');
+  editingNotaId = null;
+};
+
+window.saveNota = async function(e) {
+  e.preventDefault();
+  
+  const record = {
+    turno_origen: parseInt(document.getElementById('n-turno-origen').value),
+    turno_destino: parseInt(document.getElementById('n-turno-destino').value),
+    titulo: document.getElementById('n-titulo').value,
+    contenido: document.getElementById('n-contenido').value,
+    prioridad: document.getElementById('n-prioridad').value,
+    autor: document.getElementById('n-autor').value
+  };
+
+  try {
+    const { error } = await supabase.from('notas_turnos').insert([record]);
+    if (error) throw error;
+    
+    showToast('Nota guardada con éxito');
+    window.closeNotasModal(null);
+    await loadData();
+  } catch (err) {
+    console.error('Error saving nota:', err);
+    showToast('Error guardando nota', 'error');
+  }
+};
+
+window.markNotaAsRead = async function(id) {
+  try {
+    const { error } = await supabase.from('notas_turnos')
+      .update({ 
+        leida: true,
+        fecha_lectura: new Date().toISOString(),
+        leida_por: 'Usuario' // Por ahora hardcodeado, podría ser dinámico
+      })
+      .eq('id', id);
+    if (error) throw error;
+    
+    showToast('Nota marcada como leída');
+    await loadData();
+  } catch (err) {
+    console.error('Error marking nota as read:', err);
+    showToast('Error al marcar nota', 'error');
+  }
+};
+
+window.deleteNota = async function(id, title) {
+  if (!confirm(`¿Estás seguro de eliminar la nota "${title}"?`)) return;
+  
+  try {
+    const { error } = await supabase.from('notas_turnos').delete().eq('id', id);
+    if (error) throw error;
+    
+    showToast('Nota eliminada con éxito');
+    await loadData();
+  } catch (err) {
+    console.error('Error deleting nota:', err);
+    showToast('Error eliminando nota', 'error');
   }
 };

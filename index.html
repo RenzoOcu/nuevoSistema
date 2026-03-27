@@ -42,6 +42,14 @@
         <span class="nav-label">Descongelación</span>
         <span class="nav-badge" id="descon-badge">0</span>
       </button>
+      <button class="nav-item" id="nav-salida" onclick="showModule('salida')" aria-label="Productos Salida">
+        <span class="nav-label">Productos Salida</span>
+        <span class="nav-badge" id="salida-badge">0</span>
+      </button>
+      <button class="nav-item" id="nav-notas" onclick="showModule('notas')" aria-label="Notas Turnos">
+        <span class="nav-label">Notas Turnos</span>
+        <span class="nav-badge" id="notas-badge">0</span>
+      </button>
     </nav>
 
     <div class="sidebar-footer">
@@ -466,6 +474,109 @@
       </div>
     </section>
 
+    <!-- ── MODULE: PRODUCTOS SALIDA ── -->
+    <section class="module hidden" id="module-salida">
+      <div class="module-header">
+        <div>
+          <h1 class="module-title">Productos Salida</h1>
+          <p class="module-subtitle">Control de despacho de productos con evidencia fotográfica</p>
+        </div>
+        <button class="btn btn-primary" onclick="openSalidaModal()">+ Registrar Salida</button>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="stats-grid">
+        <div class="stat-card" id="stat-total-salida">
+          <span class="stat-label">Total Salidas Hoy</span>
+          <span class="stat-value" id="stat-total-salida-val">0</span>
+        </div>
+        <div class="stat-card stat-info" id="stat-salidas-semana">
+          <span class="stat-label">Salidas Semana</span>
+          <span class="stat-value" id="stat-salidas-semana-val">0</span>
+        </div>
+        <div class="stat-card stat-warn" id="stat-salidas-pendientes">
+          <span class="stat-label">Sin Confirmar</span>
+          <span class="stat-value" id="stat-salidas-pendientes-val">0</span>
+        </div>
+      </div>
+
+      <!-- Search and Filter -->
+      <div class="toolbar">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="salida-search" class="search-input" placeholder="Buscar por producto, responsable..." oninput="filterSalida()" />
+        </div>
+        <div class="filter-group">
+          <button class="filter-btn active" data-filter="hoy" onclick="setSalidaFilter('hoy', this)">Hoy</button>
+          <button class="filter-btn" data-filter="semana" onclick="setSalidaFilter('semana', this)">Esta Semana</button>
+          <button class="filter-btn" data-filter="todos" onclick="setSalidaFilter('todos', this)">Todos</button>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="descongelacion-table-container">
+        <table class="descongelacion-table">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Cantidad</th>
+              <th>Fecha Salida</th>
+              <th>Hora</th>
+              <th>Responsable</th>
+              <th>Asistente</th>
+              <th>F. Empaque</th>
+              <th>Foto</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="salida-table-body"></tbody>
+        </table>
+        <div class="empty-state hidden" id="salida-empty">
+          <span class="empty-icon">📦</span>
+          <p>No hay registros de salida</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── MODULE: NOTAS TURNOS ── -->
+    <section class="module hidden" id="module-notas">
+      <div class="module-header">
+        <div>
+          <h1 class="module-title">Notas por Turnos</h1>
+          <p class="module-subtitle">Comunicación entre turnos - Deja recordatorios para tus compañeros</p>
+        </div>
+        <button class="btn btn-primary" onclick="openNotasModal()">+ Nueva Nota</button>
+      </div>
+
+      <!-- Turno Selection -->
+      <div class="notas-tabs">
+        <button class="notas-tab active" onclick="selectTurno(1)" id="tab-turno-1">
+          <span class="tab-icon">🌅</span>
+          <span>Turno 1</span>
+          <span class="notas-count" id="notas-count-1">0</span>
+        </button>
+        <button class="notas-tab" onclick="selectTurno(2)" id="tab-turno-2">
+          <span class="tab-icon">☀️</span>
+          <span>Turno 2</span>
+          <span class="notas-count" id="notas-count-2">0</span>
+        </button>
+        <button class="notas-tab" onclick="selectTurno(3)" id="tab-turno-3">
+          <span class="tab-icon">🌙</span>
+          <span>Turno 3</span>
+          <span class="notas-count" id="notas-count-3">0</span>
+        </button>
+      </div>
+
+      <!-- Notas Grid -->
+      <div class="notas-grid" id="notas-grid">
+        <!-- Las notas se cargan dinámicamente -->
+      </div>
+      <div class="empty-state hidden" id="notas-empty">
+        <span class="empty-icon">📝</span>
+        <p>No hay notas para este turno</p>
+      </div>
+    </section>
+
   </main>
 
   <!-- ===== PRODUCT MODAL ===== -->
@@ -692,6 +803,144 @@
         <div class="modal-actions">
           <button type="button" class="btn btn-ghost" onclick="closeDescongelacionModal(null)">Cancelar</button>
           <button type="submit" class="btn btn-primary">Iniciar Descongelación</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== PRODUCTOS SALIDA MODAL ===== -->
+  <div class="modal-overlay hidden" id="salida-modal-overlay" onclick="closeSalidaModal(event)">
+    <div class="modal" id="salida-modal" role="dialog" aria-modal="true" aria-labelledby="salida-modal-title">
+      <div class="modal-header">
+        <h2 class="modal-title" id="salida-modal-title">Registrar Salida de Producto</h2>
+        <button class="modal-close" onclick="closeSalidaModal(null)" aria-label="Cerrar">✕</button>
+      </div>
+      <form class="modal-form" id="salida-form" onsubmit="saveSalida(event)">
+        <div class="form-grid">
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label class="form-label" for="s-producto">Producto *</label>
+            <input class="form-input" id="s-producto" type="text" placeholder="Ej: Empaque de Empanadas" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="s-cantidad">Cantidad *</label>
+            <input class="form-input" id="s-cantidad" type="number" min="0.01" step="0.01" placeholder="0" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="s-unidad">Unidad</label>
+            <select class="form-input" id="s-unidad">
+              <option value="unidad">Unidades</option>
+              <option value="kg">Kilogramos</option>
+              <option value="paquete">Paquetes</option>
+              <option value="caja">Cajas</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="s-fecha-salida">Fecha Salida *</label>
+            <input class="form-input" id="s-fecha-salida" type="date" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="s-hora-salida">Hora Salida *</label>
+            <input class="form-input" id="s-hora-salida" type="time" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="s-fecha-empaque">Fecha Empaque</label>
+            <input class="form-input" id="s-fecha-empaque" type="date" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="s-hora-empaque">Hora Empaque</label>
+            <input class="form-input" id="s-hora-empaque" type="time" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="s-responsable">Responsable *</label>
+            <input class="form-input" id="s-responsable" type="text" placeholder="Nombre del responsable" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="s-firma">Firma Asistente</label>
+            <input class="form-input" id="s-firma" type="text" placeholder="Nombre del asistente" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="s-etiqueta">Etiqueta / Código</label>
+            <input class="form-input" id="s-etiqueta" type="text" placeholder="Ej: EMP-001" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="s-motivo">Motivo</label>
+            <select class="form-input" id="s-motivo">
+              <option value="venta">Venta directa</option>
+              <option value="despacho">Despacho a local</option>
+              <option value="evento">Evento especial</option>
+              <option value="devolucion">Devolución</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label class="form-label" for="s-foto">URL Foto</label>
+            <input class="form-input" id="s-foto" type="url" placeholder="https://... o ruta local" />
+            <small style="color: var(--grey); font-size: 10px; margin-top: 4px;">Opcional: URL de la foto del producto</small>
+          </div>
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label class="form-label" for="s-notas">Notas / Observaciones</label>
+            <textarea class="form-input" id="s-notas" rows="3" placeholder="Observaciones adicionales..."></textarea>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" onclick="closeSalidaModal(null)">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Registrar Salida</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== NOTAS TURNOS MODAL ===== -->
+  <div class="modal-overlay hidden" id="notas-modal-overlay" onclick="closeNotasModal(event)">
+    <div class="modal" id="notas-modal" role="dialog" aria-modal="true" aria-labelledby="notas-modal-title">
+      <div class="modal-header">
+        <h2 class="modal-title" id="notas-modal-title">Nueva Nota para Turnos</h2>
+        <button class="modal-close" onclick="closeNotasModal(null)" aria-label="Cerrar">✕</button>
+      </div>
+      <form class="modal-form" id="notas-form" onsubmit="saveNota(event)">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="n-turno-origen">Tu Turno (Origen) *</label>
+            <select class="form-input" id="n-turno-origen" required>
+              <option value="1">Turno 1 (Mañana)</option>
+              <option value="2">Turno 2 (Tarde)</option>
+              <option value="3">Turno 3 (Noche)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="n-turno-destino">Destinatario *</label>
+            <select class="form-input" id="n-turno-destino" required>
+              <option value="1">Turno 1 (Mañana)</option>
+              <option value="2">Turno 2 (Tarde)</option>
+              <option value="3">Turno 3 (Noche)</option>
+              <option value="0">Todos los turnos</option>
+            </select>
+          </div>
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label class="form-label" for="n-titulo">Título de la Nota *</label>
+            <input class="form-input" id="n-titulo" type="text" placeholder="Ej: Revisar stock de empanadas" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="n-prioridad">Prioridad</label>
+            <select class="form-input" id="n-prioridad">
+              <option value="baja">Baja</option>
+              <option value="normal" selected>Normal</option>
+              <option value="alta">Alta</option>
+              <option value="urgente">Urgente</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="n-autor">Tu Nombre *</label>
+            <input class="form-input" id="n-autor" type="text" placeholder="Ej: Juan Pérez" required />
+          </div>
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label class="form-label" for="n-contenido">Contenido *</label>
+            <textarea class="form-input" id="n-contenido" rows="5" placeholder="Describe el recordatorio o información para el siguiente turno..." required></textarea>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" onclick="closeNotasModal(null)">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar Nota</button>
         </div>
       </form>
     </div>

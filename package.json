@@ -1,0 +1,16 @@
+{
+  "name": "nuevosistema",
+  "version": "1.0.0",
+  "description": "Sistema POS Listo Ovalo La Marina",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["pos", "sistema", "minimarket"],
+  "author": "Renzo.O",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
